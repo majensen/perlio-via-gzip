@@ -3,11 +3,11 @@
 package PerlIO::via::gzip;
 use strict;
 use warnings;
-use PerlIO::Util;
+use PerlIO;
 use IO::Compress::Gzip qw(:constants);
 use IO::Uncompress::Gunzip;
 use Carp;
-our $VERSION = '0.021';
+our $VERSION = '0.03';
 our $COMPRESSION_LEVEL = Z_DEFAULT_COMPRESSION;
 our $COMPRESSION_STRATEGY = Z_DEFAULT_STRATEGY;
 our $BLOCK_SIZE = 4096;
@@ -30,14 +30,14 @@ sub PUSHED {
 sub FILENO {
     my ($self, $fh) = @_;
     if ( !defined $self->{inited} ) {
-	my $via = grep (/via/, $fh->get_layers);
+	my $via = grep (/via/, PerlIO::get_layers($fh));
 	my $compress = ($self->{mode} =~ /w|a/ and !$via) ||
 	($self->{mode} =~ /r/ and $via);
 	$self->{fileno} = fileno($fh); # nec. to kick fileno hooks
 	$self->{inited} = 1;
 	if ($compress) {
-	    $self->{gzip} = IO::Compress::Gzip->new( 
-		$fh, 
+	    $self->{gzip} = IO::Compress::Gzip->new(
+		$fh,
 		AutoClose => 1,
 		Level => $COMPRESSION_LEVEL,
 		Strategy => $COMPRESSION_STRATEGY,
@@ -179,9 +179,8 @@ L<PerlIO|perlio>, L<PerlIO::via>, L<IO::Compress::Gzip>, L<IO::Uncompress::Gunzi
 
 =head1 AUTHOR - Mark A. Jensen
 
- Email maj -at- fortinbras -dot- us
+ Email maj -at- cpan -dot- org
  http://fortinbras.us
- http://bioperl.org/wiki/Mark_Jensen
 
 =cut
 
